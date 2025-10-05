@@ -1,2 +1,148 @@
-# Transcript Generator
+# **Transcript Generator**
 
+## **Overview**
+
+This project is a multi-step data synthesis pipeline designed to generate realistic, mock interview transcripts between an interviewer and fictional physicians. The goal is to produce high-quality synthetic data where the physicians' responses are grounded in clinical knowledge and reflect plausible practice experiences, considering the diverse regional, demographic, and socioeconomic factors across the United States.
+
+The pipeline automates three key steps:
+
+1. **Generating Structured Physician Profiles** (Location, demographics, expertise).
+2. **Generating Focused Interview Questions**.
+3. **Simulating the Conversational Interview** to produce full transcripts.
+
+## **Quick Start Guide: Orchestrating the Full Pipeline**
+
+This section covers the dependencies and how to run the full pipeline using the master orchestration script.
+
+### **1\. System Requirements & Dependencies**
+
+This pipeline requires the following packages. It is highly recommended to install these into an isolated virtual environment (.venv) located in the project root.
+
+| Package | Version | Purpose |
+| :---- | :---- | :---- |
+| **python** | 3.11+ | Execution Environment |
+| **pandas** | 2.3.3+ | Data handling (loading doctors, writing Parquet/TSV) |
+| **tqdm** | Latest | Progress bars for tracking generation |
+| **pyarrow** | Latest | Required for Parquet file support |
+| **langchain-google-genai** | 2.1.12+ | Google Gemini client |
+| **langchain-openai** | 0.3.34+ | OpenAI GPT client |
+
+### **2\. API Key Requirements**
+
+To run the full pipeline using external LLMs, you must set the relevant API keys as environment variables:
+
+* Environment variable **OPENAI\_API\_KEY** for accessing OpenAI GPT models (e.g., gpt-4o).
+* Environment variable **GEMINI\_API\_KEY** for accessing Google Gemini models.
+
+### **3\. Execution using run\_pipeline.sh**
+
+The entire process is coordinated by **orchestrate.py** and run via the shell wrapper **run\_pipeline.sh**. This wrapper ensures the correct Python environment and local modules are loaded, regardless of your current directory.
+
+The general syntax is: ./deployment/run\_pipeline.sh \<specialty\> \<illness\> \[optional arguments...\]
+
+| Argument | Description | Default |
+| :---- | :---- | :---- |
+| \<specialty\> (Positional) | The medical specialty. | Required |
+| \<illness\> (Positional) | The condition/disease being treated. | Required |
+| \-d / \--doctors | Number of doctor profiles to generate. | 20 |
+| \-q / \--questions | Number of interview questions to generate. | 30 |
+| \-m / \--model | LLM model to use for all generation steps. Tested models include **gpt-4o**, **gpt-5**, and **gemini-2.5**. | gpt-4o |
+| \-w / \--working | Base directory for output. | Current execution directory. |
+| \-f / \--force | Overwrite existing files. | False |
+| \-k / \--mock-mode | Use the internal mock LLM for local testing. (Recommended to avoid API costs). | False |
+
+**Examples:**
+
+\# Example 1: Generate 10 Cardiologists focused on Hypertension using a Mock LLM (for testing)  
+\# Note: Use \-k to test without incurring API costs.  
+./deployment/run\_pipeline.sh Cardiologist Hypertension \-d 10 \-q 15 \-m gpt-4o \-k
+
+\# Example 2: Generate 20 Pulmonologists for COPD using a real LLM (requires API Key)  
+\# The output directory will be: ./pulmonologist/copd/  
+./deployment/run\_pipeline.sh Pulmonologist COPD \-d 20 \-q 30 \-m gemini-2.5
+
+\# Example 3: Use a specific working directory for output  
+./deployment/run\_pipeline.sh Dermatologist Eczema \-w /tmp/pipeline\_data/ \-f
+
+## **Advanced Usage: Flexible Workflow**
+
+The three individual generation scripts (mkdocs.py, mkquestions.py, mktranscripts.py) can be run independently to allow for custom inputs, testing specific stages, or using different lists of doctors/questions for the final transcript generation.
+
+### **1\. Pipeline Component Flow**
+
+The scripts connect in a linear fashion, consuming the output of one as the input for the next:
+
+* **mkdocs.py (Doctor Profile Generator):** Uses the LLM to generate structured physician data and outputs a file (e.g., doctors.json).
+* **mkquestions.py (Question Generator):** Uses the LLM to generate plain-text questions and outputs a file (e.g., questions.txt).
+* **mktranscripts.py (Transcript Generator):** Consumes both the doctors.json and questions.txt files to simulate the conversational interview and generate the final transcript files in an output directory (e.g., transcripts/\*.txt).
+
+### **2\. Individual Script User Guides**
+
+#### **mkdocs.py (Doctor Profiles Generation)**
+
+Used to create the initial structured data of fictional physicians.
+
+| Argument | Description | Default |
+| :---- | :---- | :---- |
+| \-s / \--specialty | **Required Named Argument.** The medical specialty. | N/A |
+| \-i / \--illness | **Required Named Argument.** The condition being treated. | N/A |
+| \-o / \--output | Path to the output file (e.g., data/profiles.json). | Required |
+| \-d / \--doctors | Number of doctor profiles to generate. | 20 |
+| \-m / \--model | LLM model to use. | gpt-4o |
+| \-f / \--format | Output format (json, tsv, or parquet). Inferred from \-o filename if omitted. | json |
+| \-k / \--mock-mode | Use the mock LLM client. | False |
+
+#### **mkquestions.py (Question Generation)**
+
+Used to create the plain-text question list for interviews.
+
+| Argument | Description | Default |
+| :---- | :---- | :---- |
+| \-s / \--specialty | **Required Named Argument.** The medical specialty. | N/A |
+| \-i / \--illness | **Required Named Argument.** The condition being treated. | N/A |
+| \-o / \--output | Path to the output file (always .txt). | Required |
+| \-q / \--questions | Number of interview questions to generate. | 30 |
+| \-m / \--model | LLM model to use. | gpt-4o |
+| \-k / \--mock-mode | Use the mock LLM client. | False |
+
+#### **mktranscripts.py (Transcript Generation)**
+
+Used to consume existing doctor and question files to generate the final transcripts.
+
+| Argument | Description | Default |
+| :---- | :---- | :---- |
+| \-s / \--specialty | **Required Named Argument.** The medical specialty. | N/A |
+| \-i / \--illness | **Required Named Argument.** The condition being treated. | N/A |
+| \-w / \--working | **Working Directory.** If given, input/output paths are relative to this directory. | Current working directory. |
+| \-d / \--doctors | Path to the doctor profiles file (JSON/TSV/Parquet). | doctors.json (relative to \-w if used). |
+| \-q / \--questions | Path to the interview questions file (text). | questions.txt (relative to \-w if used). |
+| \-o / \--output | Path to the output **directory** for transcripts. | transcripts (relative to \-w if used). |
+| \-m / \--model | LLM model to use. | gpt-4o |
+| \-c / \--chunk-size | Number of questions to ask the LLM in each turn. | 5 |
+| \-r / \--random | Randomly sample N doctors from the input file. | All doctors are used. |
+| \-f / \--force | Overwrite existing transcript files. | False |
+| \-k / \--mock-mode | Use the mock LLM client. | False |
+
+### **3\. Input File Formats (For custom files)**
+
+#### **Doctor Profiles File (Input for mktranscripts.py)**
+
+* **Supported Formats:** JSON, Parquet, TSV.
+* **Structure:** Must be a list of objects/rows containing the following columns/keys.
+
+| Required Field | Description |
+| :---- | :---- |
+| doctor\_name | Full name of the physician. |
+| location | City, State (e.g., "Bronx, New York"). |
+| zip\_code | 5-digit ZIP code. |
+| key\_demographics | Summary of local population characteristics. |
+| {illness}\_care\_implications | Local factors affecting treatment (e.g., "High reliance on public clinics"). |
+| gender | Gender identity. |
+| years\_in\_practice | Number of years in practice. |
+
+**Note on TSV:** If providing a custom **TSV file**, the first row **must** contain the exact column headers (field names) listed above.
+
+#### **Interview Questions File (Input for mktranscripts.py)**
+
+* **Format:** Plain text (.txt).
+* **Structure:** Each line must contain exactly one unique, complete interview question. Blank lines are ignored during loading.
