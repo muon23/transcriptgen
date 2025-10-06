@@ -42,8 +42,7 @@ class Llm(ABC):
         }
         if role_names:
             # Overwrite defaults if custom roles are provided
-            for r in role_names:
-                self.role_names[r] = role_names[r]
+            self.role_names.update(role_names)
 
         # Use GPT-2 tokenizer as a robust, universal approximation for token counting
         self.tokenizer = AutoTokenizer.from_pretrained("gpt2")
