@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Tuple
 import pandas as pd
 from tqdm import tqdm  # Using standard tqdm for console progress bars
 
+from llms import Llm
+
 
 # --- MOCK LLM MODULE FOR TESTING (Required for runnable main function) ---
 class MockLLM:
@@ -18,7 +20,7 @@ class MockLLM:
         self.model_name = model_name
         self.call_count = 0
 
-    def invoke(self, prompt_history: List[Tuple[str, str]], arguments: Dict[str, Any] = None) -> Dict[str, str]:
+    def invoke(self, prompt_history: List[Tuple[str, str]], arguments: Dict[str, Any] = None) -> Llm.Response:
         """Generates a mock transcript snippet based on the current context."""
         self.call_count += 1
 
@@ -31,7 +33,7 @@ class MockLLM:
         # Create a mock response
         response = f"{doctor_name} (Mock Reply #{self.call_count}): This is a simulated response based on the profile of {doctor_name} and the following questions/context:\n---\n{latest_user_content}\n---"
 
-        return {"content": response}
+        return Llm.Response(text=response)
 
 
 class MockLLMService:
@@ -239,9 +241,8 @@ def make_transcript(
 
         answer = bot.invoke(transcript_prompt, arguments={"doctor_profile": doctor_profile.to_dict()})
 
-        response_content = answer["content"]
-        transcript_prompt.append(("assistant", response_content))
-        transcript += response_content + "\n\n"
+        transcript_prompt.append(("assistant", answer.text))
+        transcript += answer.text + "\n\n"
 
     return transcript
 

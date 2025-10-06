@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Sequence, Any, List, Dict
 
@@ -24,6 +25,17 @@ class Llm(ABC):
         HUMAN = 1
         AI = 2
 
+    @dataclass
+    class Response:
+        """Standardized structure for LLM responses across all provider subclasses."""
+        text: str = None
+        image_url: str = None
+        tool_calls: list[dict] = field(default_factory=list)
+        citations: list[dict] = field(default_factory=list)
+        thought: str = None
+        metadata: Any = None
+        raw: Any = None
+
     def __init__(self, llm: Runnable, role_names: dict = None):
         """
         Initializes the LLM wrapper.
@@ -47,7 +59,7 @@ class Llm(ABC):
         # Use GPT-2 tokenizer as a robust, universal approximation for token counting
         self.tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
-    def invoke(self, prompt: Sequence[tuple[Role | str, str] | str] | str, **kwargs) -> dict:
+    def invoke(self, prompt: Sequence[tuple[Role | str, str] | str] | str, **kwargs) -> Response:
         """
         Processes the prompt, executes the LLM chain, and returns the cleaned response.
 
@@ -76,7 +88,7 @@ class Llm(ABC):
         config = RunnableConfig(metadata={"task": task})
 
         # Execute the chain
-        response = chain.invoke(input=arguments, config=config, **kwargs)
+        response: Llm.Response = chain.invoke(input=arguments, config=config, **kwargs)
 
         return response
 
@@ -98,7 +110,7 @@ class Llm(ABC):
             return ChatPromptTemplate(messages=messages)
 
     @abstractmethod
-    def clean_up_response(self, response: Any) -> dict:
+    def clean_up_response(self, response: Any) -> Response:
         """
         Abstract method to clean up and standardize the LLM's raw response.
 

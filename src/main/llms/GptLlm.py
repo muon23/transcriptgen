@@ -101,7 +101,7 @@ class GptLlm(Llm):
         # Call the abstract class constructor
         super().__init__(llm=self.llm, role_names=role_names)
 
-    def clean_up_response(self, response: Any) -> dict:
+    def clean_up_response(self, response: Any) -> Llm.Response:
         """
         Cleans up the raw response from the LangChain wrapper.
 
@@ -115,10 +115,10 @@ class GptLlm(Llm):
             TypeError: If the response object is not the expected AIMessage.
         """
         if isinstance(response, AIMessage):
-            return {
-                "content": response.text(),
-                "metadata": response
-            }
+            return Llm.Response(
+                text=response.text(),
+                raw=response,
+            )
 
         else:
             raise TypeError(f"Unsupported return type for GptLlm.invoke() (was {type(response)})")

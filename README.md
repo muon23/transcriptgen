@@ -123,6 +123,8 @@ Used to consume existing doctor and question files to generate the final transcr
 | \-f / \--force | Overwrite existing transcript files. | False |
 | \-k / \--mock-mode | Use the mock LLM client. | False |
 
+*Note about -c / --chunk-size*: The chunk size controls the performance vs. detail trade-off. A larger chunk size reduces the total number of API calls and runtime but may lead to individual answers being shorter or less contextually rich.
+
 ### **3\. Input File Formats (For custom files)**
 
 #### **Doctor Profiles File (Input for mktranscripts.py)**

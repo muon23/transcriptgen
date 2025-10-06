@@ -18,7 +18,7 @@ class DeepInfraLlm(Llm):
         "Sao10K/L3.3-70B-Euryale-v2.3": {"aliases": ["euryale"], "token_limit": 131_072},
         "meta-llama/Llama-3.3-70B-Instruct": {"aliases": ["llama-3"]},
         "microsoft/WizardLM-2-8x22B": {"aliases": ["wizard-2"], "token_limit": 65_536},
-        "deepseek-ai/DeepSeek-V3-0324": {"aliases": ["deepseek-v3"], "token_limit": 163_840},
+        "deepseek-ai/DeepSeek-V3.1": {"aliases": ["deepseek-v3"], "token_limit": 163_840},
         "meta-llama/Llama-4-Maverick-17B-128E-Instruct-FP8": {"aliases": ["llama-4"]}
     }
 
@@ -54,12 +54,12 @@ class DeepInfraLlm(Llm):
 
         super().__init__(llm=self.llm)
 
-    def clean_up_response(self, response: Any) -> dict:
+    def clean_up_response(self, response: Any) -> Llm.Response:
         if isinstance(response, str):
-            return {
-                "content": response,
-                "metadata": {}
-            }
+            return Llm.Response(
+                text=response,
+                raw=response
+            )
 
         else:
             raise TypeError(f"Unsupported return type for GptLlm.invoke() (was {type(response)})")

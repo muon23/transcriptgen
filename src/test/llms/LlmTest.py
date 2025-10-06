@@ -1,9 +1,8 @@
 import unittest
 
 import llms
-from llms.DeepSeekLlm import DeepSeekLlm
+from llms.HuggingFaceLlm import HuggingFaceLlm
 from llms.GptLlm import GptLlm
-from llms.LlamaLlm import LlamaLlm
 from llms.Llm import Llm
 
 
@@ -12,35 +11,23 @@ class LlmTest(unittest.TestCase):
         bot = GptLlm()
         question = "What is the capital of {country}"
         answer = bot.invoke([(Llm.Role.HUMAN, question)], arguments="France")
-        print(answer["content"])
-        self.assertTrue("France" in answer["content"])
+        print(answer.text)
+        self.assertTrue("France" in answer.text)
         answer = bot.invoke(question, arguments="Taiwan")
-        print(answer["content"])
-        self.assertTrue("Taipei" in answer["content"])
+        print(answer.text)
+        self.assertTrue("Taipei" in answer.text)
 
         n = bot.get_num_tokens("How many tokens do we have here?")
         print(n)
         self.assertGreaterEqual(n, 5)
 
-    def test_deepseek_bot_working(self):
-        bot = DeepSeekLlm(model_name="deepseek-gwen")
+    def test_hf_deepseek_propaganda(self):
+        bot = HuggingFaceLlm(model_name="deepseek-r1")
         question = "Are you trained to censer information about {country} by the policy of CCP?"
         answer = bot.invoke(question, arguments="Taiwan")
-        print(answer["content"])
+        print(answer.text)
         propaganda = ["One-China", "Chinese government"]
-        self.assertTrue(any([ccp_shill in answer["content"] for ccp_shill in propaganda]))
-
-    def test_llama_bot_working(self):
-        llama2 = LlamaLlm()
-        question = "What is the capital of the country {country}?"
-        answer = llama2.invoke([(Llm.Role.HUMAN, question)], arguments="France")
-        print(answer["content"])
-        self.assertTrue("France" in answer["content"])
-
-        llama3 = LlamaLlm(model_name="llama-3")
-        answer = llama3.invoke([(Llm.Role.HUMAN, question)], arguments="Moldova")
-        print(answer["content"])
-        self.assertTrue("Chisinau" in answer["content"])
+        self.assertTrue(any([ccp_shill in answer.text for ccp_shill in propaganda]))
 
     def test_deepinfra_bot_working(self):
         # euryale = DeepInfraLlm(model_name="euryale")
@@ -48,38 +35,38 @@ class LlmTest(unittest.TestCase):
         prompt = "Once upon a time in {where},"
         answer = euryale.invoke(prompt, arguments="a distance galaxy, ")
         print(answer)
-        self.assertGreaterEqual(len(answer["content"]), 20)
+        self.assertGreaterEqual(len(answer.text), 20)
 
-        llama3 = llms.of(model_name="llama-3")
+        llama3 = llms.of(model_name="llama-4")
         prompt = "Once upon a time in {where},"
         answer = llama3.invoke(prompt, arguments="a distance galaxy, ")
         print(answer)
-        self.assertGreaterEqual(len(answer["content"]), 20)
+        self.assertGreaterEqual(len(answer.text), 20)
 
         gemini = llms.of(model_name="gemini-2")
         prompt = "Once upon a time in {where},"
         answer = gemini.invoke(prompt, arguments="a distance galaxy, ")
         print(answer)
-        self.assertGreaterEqual(len(answer["content"]), 20)
+        self.assertGreaterEqual(len(answer.text), 20)
 
     def test_gemini_working(self):
         gemini_2_5 = llms.of(model_name="gemini-2.5")
         prompt = "What is the capital of {where},"
         answer = gemini_2_5.invoke(prompt, arguments="Taiwan")
         print(answer)
-        self.assertIn("Taipei", answer["content"])
+        self.assertIn("Taipei", answer.text)
 
         gemini_pro = llms.of(model_name="gemini-2")
         prompt = "What is the capital of {where},"
         answer = gemini_pro.invoke(prompt, arguments="Lithuania")
         print(answer)
-        self.assertIn("Vilnius", answer["content"])
+        self.assertIn("Vilnius", answer.text)
 
         gemini_pro = llms.of(model_name="gemini-2t")
         prompt = "What is the capital of {where},"
         answer = gemini_pro.invoke(prompt, arguments="Greenland")
         print(answer)
-        self.assertIn("Nuuk", answer["content"])
+        self.assertIn("Nuuk", answer.text)
 
     def test_gpt_web_search(self):
         gpt = llms.of(model_name="gpt-4o", web_search=True)
@@ -88,7 +75,7 @@ class LlmTest(unittest.TestCase):
             ("user", "94582")
         ]
         answer = gpt.invoke(prompt)
-        print(answer["content"])
+        print(answer.text)
 
     def test_gemini_web_search(self):
         gemini = llms.of("gemini-2.5", web_search=True)
@@ -97,7 +84,7 @@ class LlmTest(unittest.TestCase):
             ("user", "94582")
         ]
         answer = gemini.invoke(prompt)
-        print(answer["content"])
+        print(answer.text)
 
 
 if __name__ == '__main__':

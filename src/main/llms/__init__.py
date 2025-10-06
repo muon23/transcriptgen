@@ -8,9 +8,8 @@ based on the requested model name.
 from llms.GeminiLlm import GeminiLlm
 from llms.Llm import Llm
 from llms.DeepInfraLlm import DeepInfraLlm
-from llms.DeepSeekLlm import DeepSeekLlm
+from llms.HuggingFaceLlm import HuggingFaceLlm
 from llms.GptLlm import GptLlm
-from llms.LlamaLlm import LlamaLlm
 
 
 def of(model_name: str, **kwargs) -> Llm:
@@ -31,7 +30,7 @@ def of(model_name: str, **kwargs) -> Llm:
     Raises:
         RuntimeError: If the provided model_name is not supported by any known subclass.
     """
-    bots = [GptLlm, GeminiLlm, DeepInfraLlm, LlamaLlm, DeepSeekLlm]
+    bots = [GptLlm, GeminiLlm, DeepInfraLlm, HuggingFaceLlm]
 
     for bot in bots:
         # Check if the model_name is in the list of supported models for this class

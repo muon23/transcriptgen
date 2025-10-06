@@ -294,7 +294,7 @@ def main():
 
     try:
         # Load the generated JSON string into a Python list/dict
-        profiles = json.loads(answer["content"])
+        profiles = json.loads(answer.text)
     except json.JSONDecodeError as e:
         logging.error(f"Failed to decode JSON response from LLM: {e}")
         logging.error("Raw response content: %s", answer.get("content", "[None]"))

@@ -191,15 +191,12 @@ def main():
 
     answer = bot.invoke(prompt)
 
-    # The content is expected to be a single string of text
-    questions_text = answer.get("content", "").strip()
-
-    if not questions_text:
+    if not answer.text:
         logging.error("Received empty response from the LLM. Cannot save data.")
         sys.exit(1)
 
     # Write data to output file
-    save_data(questions_text, args.output)
+    save_data(answer.text, args.output)
 
 
 if __name__ == '__main__':

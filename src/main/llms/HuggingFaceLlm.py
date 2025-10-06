@@ -12,22 +12,21 @@ from llms.HuggingFaceChatRunnable import HuggingFaceChatRunnable
 from llms.RunnableToLLMAdapter import RunnableToLLMAdapter
 
 
-class DeepSeekLlm(Llm):
+class HuggingFaceLlm(Llm):
 
-    SUPPORTED_MODELS = [
-        "deepseek-ai/DeepSeek-R1",
-        "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
-    ]
-
-    MODEL_ALIASES = {
-        "deepseek": "deepseek-ai/DeepSeek-R1",
-        "deepseek-gwen": "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B",
+    # Model metadata, including token limits and aliases
+    __MODELS = {
+        "deepseek-ai/DeepSeek-R1": {"aliases": ["deepseek-r1"], "token_limit": 8000},
     }
 
-    __MODEL_TOKEN_LIMITS = {
-        "deepseek-ai/DeepSeek-R1": 8000,
-        "deepseek-ai/DeepSeek-R1-Distill-Qwen-32B": 32_768,
-    }
+    # List of all canonical model names
+    SUPPORTED_MODELS = list(__MODELS.keys())
+
+    # Mapping from aliases (e.g., 'gpt-3.5') to canonical names ('gpt-3.5-turbo')
+    MODEL_ALIASES = Llm._alias2model(__MODELS)
+
+    # Dictionary mapping canonical model names to their context window size
+    __MODEL_TOKEN_LIMITS = Llm._model_token_limit(__MODELS, 8000)
 
     __URL_PREFIX = "https://huggingface.co/"
 
@@ -59,26 +58,23 @@ class DeepSeekLlm(Llm):
         match = re.search(r"(<think>)?(.*?)</think>(.*)", text, re.DOTALL)
         return (match.group(2).strip(), match.group(3).strip()) if match else ("", text)
 
-    def clean_up_response(self, response: Any) -> dict:
+    def clean_up_response(self, response: Any) -> Llm.Response:
         if isinstance(response, AIMessage):
             content = response.content
-            metadata = {"response": response}
 
         elif isinstance(response, str):
             content = response
-            metadata = dict()
 
         else:
             raise TypeError(f"Unsupported return type for HfLlm.invoke() (was {type(response)})")
 
         thought, content = self.__separate_think_tag(content)
-        if thought:
-            metadata["thought"] = thought
 
-        return {
-            "content": content,
-            "metadata": metadata,
-        }
+        return Llm.Response(
+            text=content,
+            thought=thought,
+            raw=response
+        )
 
     def get_max_tokens(self) -> int:
         limit = self.__MODEL_TOKEN_LIMITS.get(self.model_name, 4000)

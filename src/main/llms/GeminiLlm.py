@@ -90,7 +90,7 @@ class GeminiLlm(Llm):
         # and AI responses to the 'model' role.
         super().__init__(llm=self.llm, role_names={self.Role.SYSTEM: "user", self.Role.AI: "model"})
 
-    def clean_up_response(self, response: Any) -> dict:
+    def clean_up_response(self, response: Any) -> Llm.Response:
         """
         Cleans up the raw response from the LangChain wrapper.
 
@@ -98,16 +98,16 @@ class GeminiLlm(Llm):
             response: The raw output from the ChatGoogleGenerativeAI runnable.
 
         Returns:
-            A dictionary containing the cleaned response content and metadata.
+
 
         Raises:
             TypeError: If the response object is not the expected AIMessage.
         """
         if isinstance(response, AIMessage):
-            return {
-                "content": response.content,
-                "metadata": response
-            }
+            return Llm.Response(
+                text=response.content,
+                raw=response
+            )
 
         else:
             raise TypeError(f"Unsupported return type for GptLlm.invoke() (was {type(response)})")
