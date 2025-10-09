@@ -57,7 +57,7 @@ To run the full pipeline using external LLMs, you must set the relevant API keys
 
 * Environment variable **OPENAI\_API\_KEY** for accessing OpenAI GPT models (e.g., gpt-4o).
 * Environment variable **GEMINI\_API\_KEY** for accessing Google Gemini models.
-* Environment variable **DEEPINFRA\_API\_KEY** for accessing DeepInfra models.
+* Environment variable **DEEPINFRA\_API\_KEY** for accessing open source models in DeepInfra.
 
 ### **3\. Execution using run\_pipeline.sh**
 
