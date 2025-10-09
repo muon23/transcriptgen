@@ -146,6 +146,13 @@ def main():
         help='Random sample N doctors for mktranscripts.py.'
     )
 
+    parser.add_argument(
+        '-l', '--lookup',
+        action='store_true',
+        default=False,
+        help='If set, turn on web search tool.'
+    )
+
     args = parser.parse_args()
 
     # --- Directory Setup ---
@@ -179,6 +186,9 @@ def main():
     if args.random is not None:
         transcript_specific_args.extend(['-r', str(args.random)])
 
+    # --- Whether to search the web
+    if args.lookup:
+        common_args.append('-l')
 
     # --- Execution Pipeline ---
 
@@ -197,7 +207,6 @@ def main():
     else:
         run_script(DOC_SCRIPT, doc_args)
 
-
     # 2. Run mkquestions.py to generate interview questions
     logging.info(f"\n--- Step 2/3: Generating interview questions using {Q_SCRIPT} ---")
 
@@ -206,7 +215,7 @@ def main():
                  '-i', args.illness,
                  '-o', str(questions_file),
                  '-q', str(args.questions),
-             ] + common_args
+            ] + common_args
 
     if questions_file.is_file() and not args.force:
         logging.warning(f"Questions file already exists: {questions_file}. Skipping {Q_SCRIPT}. Use -f to force overwrite.")

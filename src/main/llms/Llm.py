@@ -1,11 +1,15 @@
+import json
+import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Sequence, Any, List, Dict
 
+from langchain.agents import create_tool_calling_agent, AgentExecutor
 from langchain_core.language_models import BaseLanguageModel
+from langchain_core.messages import AIMessage
 from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnableSequence, Runnable, RunnableConfig
+from langchain_core.runnables import RunnableSequence, Runnable, RunnableConfig, RunnableLambda
 from transformers import AutoTokenizer
 
 
@@ -175,5 +179,97 @@ class Llm(ABC):
             limits[model] = properties.get("token_limit", default)
         return limits
 
+    @staticmethod
+    def _safe_json_loads(x):
+        try:
+            return json.loads(x) if isinstance(x, str) else x
+        except Exception:
+            return None
+
+    @staticmethod
+    def _extract_sources_from_observation(obs) -> List[str]:
+        urls = []
+        data = Llm._safe_json_loads(obs)
+        if isinstance(data, list):
+            for item in data:
+                if isinstance(item, dict):
+                    url = item.get("url")
+                    if url:
+                        urls.append(url)
+        elif isinstance(data, dict):
+            url = data.get("url")
+            if url:
+                urls.append(url)
+        return urls
+
+    @classmethod
+    def _make_agent_runnable(cls, llm, tools, system_prompt: str = "You are helpful.") -> Runnable:
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("placeholder", "{chat_history}"),
+            ("human", "{input}"),
+            ("placeholder", "{agent_scratchpad}"),
+        ])
+        agent = create_tool_calling_agent(llm, tools, prompt)
+
+        # Return intermediate steps so we can summarize tools/sources
+        executor = AgentExecutor(
+            agent=agent,
+            tools=tools,
+            verbose=False,
+            return_intermediate_steps=True,
+        )
+
+        def _invoke(x):
+            result: Dict[str, Any] = executor.invoke({"input": x, "chat_history": []})
+            output_text = result.get("output", "")
+
+            # Put in more information for troubleshooting
+            steps = result.get("intermediate_steps", [])  # list of (AgentAction, observation)
+            tools_used: List[str] = []
+            sources: List[str] = []
+
+            for action, observation in steps:
+                # action.tool and action.tool_input exist for tool-calling agents
+                tool_name = getattr(action, "tool", None)
+                if tool_name:
+                    tools_used.append(tool_name)
+
+                # try to extract URLs from your WebSearch tool’s observation (list[dict])
+                sources.extend(Llm._extract_sources_from_observation(observation))
+
+            # dedupe but keep order
+            def _dedupe(seq): return list(dict.fromkeys(seq))
+            tools_used = _dedupe(tools_used)
+            sources = _dedupe(sources)
+
+            # Optional compact trace (be careful not to bloat tokens)
+            compact_trace = []
+            for action, observation in steps:
+                tool_name = getattr(action, "tool", None)
+                tool_args = getattr(action, "tool_input", None)
+                compact_trace.append({
+                    "tool": tool_name,
+                    "args_preview": str(tool_args)[:200] if tool_args is not None else None,
+                    "obs_preview": (observation[:200] if isinstance(observation, str) else None)
+                })
+
+            meta = {
+                "agent_executor": "tool_calling",
+                "model": getattr(llm, "model_name", getattr(llm, "model", None)),
+                "num_steps": len(steps),
+                "tools_used": tools_used,
+                "sources": sources,
+            }
+
+            return AIMessage(
+                id=str(uuid.uuid4()),
+                content=output_text,
+                response_metadata=meta,
+                # keep the big stuff out of `additional_kwargs` if you worry about token bloat
+                additional_kwargs={"trace": compact_trace} if compact_trace else {},
+            )
+
+        return RunnableLambda(_invoke)
 
 

@@ -354,6 +354,14 @@ def main():
         help='Force generation, overwriting any existing transcript files in the output directory.'
     )
 
+    # 12. Turn on web search
+    parser.add_argument(
+        '-l', '--lookup',
+        action='store_true',
+        default=False,
+        help='If set, turn on web search tool.'
+    )
+
     args = parser.parse_args()
 
     # --- PATH RESOLUTION AND SETUP ---
@@ -422,7 +430,7 @@ def main():
         try:
             import llms
             logging.info("Using real LLM service.")
-            bot = llms.of(args.model)
+            bot = llms.of(args.model, web_search=args.lookup)
         except ImportError:
             logging.error("Could not import the external 'llms' package.")
             logging.warning("Falling back to MOCK mode for execution.")

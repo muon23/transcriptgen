@@ -218,7 +218,15 @@ def main():
         )
     )
 
-    # 7. Optional Argument: Mock Mode (for testing)
+    # 7. Turn on web search
+    parser.add_argument(
+        '-l', '--lookup',
+        action='store_true',
+        default=False,
+        help='If set, turn on web search tool.'
+    )
+
+    # 8. Optional Argument: Mock Mode (for testing)
     parser.add_argument(
         '-k', '--mock-mode',
         action='store_true',
@@ -243,7 +251,7 @@ def main():
             # Assume the real llms package is available for normal execution
             import llms
             logging.info("Using real LLM service.")
-            bot = llms.of(args.model)
+            bot = llms.of(args.model, web_search=args.lookup)
         except ImportError:
             logging.error("Could not import the external 'llms' package.")
             logging.warning("Falling back to MOCK mode for execution.")
@@ -285,7 +293,7 @@ def main():
           - doctor_name
           - gender
           - years_in_practice
-        - Do not include ```json or any code block delimiters.
+        - Output only the JSON.  Do not include ```json or any code block delimiters.
         - Do not include explanations, comments, or extra text.
         </instructions>
         """)
