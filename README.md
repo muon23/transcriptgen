@@ -40,14 +40,16 @@ It is highly recommended to install these into an isolated virtual environment (
 
 This is a highlight of essential packages.
 
-| Package | Version | Purpose |
-| :---- | :---- | :---- |
-| **python** | 3.11+ | Execution Environment |
-| **pandas** | 2.3.3+ | Data handling (loading doctors, writing Parquet/TSV) |
-| **tqdm** | Latest | Progress bars for tracking generation |
-| **pyarrow** | Latest | Required for Parquet file support |
-| **langchain-google-genai** | 2.1.12+ | Google Gemini client |
-| **langchain-openai** | 0.3.34+ | OpenAI GPT client |
+| Package                          | Version | Purpose                                              |
+|:---------------------------------| :---- |:-----------------------------------------------------|
+| **python**                       | 3.11+ | Execution Environment                                |
+| **pandas**                       | 2.3.3+ | Data handling (loading doctors, writing Parquet/TSV) |
+| **langchain**                    | 0.3.27 | LangChain framework                                  |
+| **langchain-google-genai**       | 2.1.12+ | Google Gemini client for LangChain                   |
+| **langchain-openai**             | 0.3.34+ | OpenAI GPT client  for LangChain                     |
+| **openai**                       | 2.1.0 | OpenAI client access |
+| **google-ai-generativelanguage** | 0.7.0 | Google Gemini client access |
+| **ddgs**                         | 9.6.0 | To use DuckDuckGo for local web search agent         |
 
 ### **2\. API Key Requirements**
 
