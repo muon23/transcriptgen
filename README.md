@@ -32,6 +32,8 @@ The pipeline automates three key steps:
 
 This section covers the dependencies and how to run the full pipeline using the master orchestration script.
 
+Package requirements can be found in `deployment/requirements.txt`
+
 ### **1\. System Requirements & Dependencies**
 
 This pipeline requires the following packages. It is highly recommended to install these into an isolated virtual environment (.venv) located in the project root.
