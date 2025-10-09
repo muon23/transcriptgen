@@ -188,7 +188,7 @@ def make_transcript(
         </task>
 
         <instructions>
-        - Use web search or external medical knowledge to understand how regional demographics, socioeconomic factors, and healthcare infrastructure influence {illness} care in the physician’s area.
+        - Use web search or external medical knowledge, if necessary, to understand how regional demographics, socioeconomic factors, and healthcare infrastructure influence {illness} care in the physician’s area.
         - Incorporate these contextual factors naturally into the physician’s responses (e.g., access to care, climate, environment, patient population characteristics, insurance coverage, public health resources, or cultural attitudes toward treatment).
         - The transcript must read as a natural, professional, back-and-forth conversation between the interviewer and the physician.
         - The physician’s replies should sound grounded in practice experience — balancing clinical knowledge, local realities, and personal insight.
@@ -202,6 +202,7 @@ def make_transcript(
           {doctor_name}: [response]
         - The user will mark the interview boundaries with [start interview] and [end interview].
           Continue the conversation naturally between these markers as directed.
+        - Do not include any introductions, explanations, comments, or any extra text that are not part of the conversation.
         </instructions>
 
         <doctor_profile>

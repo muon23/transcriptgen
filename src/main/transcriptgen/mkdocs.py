@@ -294,7 +294,7 @@ def main():
           - gender
           - years_in_practice
         - Output only the JSON.  Do not include ```json or any code block delimiters.
-        - Do not include explanations, comments, or extra text.
+        - Do not include any introductions, explanations, comments, or any extra text.
         </instructions>
         """)
 
@@ -305,7 +305,7 @@ def main():
         profiles = json.loads(answer.text)
     except json.JSONDecodeError as e:
         logging.error(f"Failed to decode JSON response from LLM: {e}")
-        logging.error("Raw response content: %s", answer.get("content", "[None]"))
+        logging.error("Raw response content: %s", answer.text)
         sys.exit(1)
 
     # Write data to output file in the determined format

@@ -188,6 +188,7 @@ def main():
           * One question per line
           * No numbering, bullet points, or extra characters
           * No explanations, comments, or code fences
+        - Do not include any introductions, explanations, comments, or any extra text.
         </instructions>
 
         <examples>
